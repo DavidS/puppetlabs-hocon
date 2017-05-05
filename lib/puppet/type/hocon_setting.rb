@@ -7,6 +7,9 @@ Puppet::Type.newtype(:hocon_setting) do
 
   newparam(:setting, :namevar => true) do
     desc 'The name of the setting to be defined.'
+    validate do |value|
+      raise Puppet::Error, "Please set the setting property explicitly" if value == Puppet::Type.type(:hocon_setting).title_match_indicator
+    end
   end
 
   newparam(:path, :namevar => true) do
@@ -102,12 +105,16 @@ Puppet::Type.newtype(:hocon_setting) do
     end
   end
 
+  def self.title_match_indicator
+    @title_match_indicator ||= Object.new
+  end
+
   def self.title_patterns
     # This is the default title pattern for all types, except hard-wired to
     # set the title to :setting instead of :name. This is also hard-wired to
     # ONLY set :setting and nothing else, and this will be overridden if
     # the :setting parameter is set manually.
-    [ [ /(.*)/m, [ [:setting] ] ] ]
+    [ [ /(.*)/m, [ [:setting, lambda {|x| title_match_indicator }] ] ] ]
   end
 
   validate do
